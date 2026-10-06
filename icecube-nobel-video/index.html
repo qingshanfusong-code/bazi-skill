@@ -1,0 +1,559 @@
+<title>冰下之眼</title>
+<meta name="description" content="2026 诺贝尔物理学奖 · Francis Halzen 与冰立方中微子天文台 · 60 秒竖屏科普动画（录屏用）">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: one fixed 1080×1920 (9:16) stage, scaled to fit the window; canvas draws the scenes, DOM text rides on top */
+:root{
+  --void:#020812;      /* deep polar night */
+  --frost:#eef8ff;     /* subtitle white */
+  --cherenkov:#45d8ff; /* the blue flash IceCube waits for */
+  --mute:#8cb2cf;      /* labels, eyebrows */
+  --aurora:#46e3a6;
+  --gold:#f3c870;      /* used only for the prize moment */
+  --display:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --data:"Barlow Condensed","DIN Alternate","Arial Narrow",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--void);overflow:hidden;cursor:none}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;transform-origin:0 0;overflow:hidden;background:var(--void);font-family:var(--display);color:var(--frost)}
+#cv{position:absolute;inset:0;width:1080px;height:1920px;display:block}
+
+/* timed overlay text */
+.ov{position:absolute;left:0;right:0;text-align:center;opacity:0;transform:translateY(26px);transition:opacity .45s ease,transform .7s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.ov.on{opacity:1;transform:none}
+.eyebrow{font:600 34px/1 var(--data);letter-spacing:.32em;color:var(--mute);text-transform:uppercase}
+.eyebrow.zh{font:700 34px/1 var(--display);letter-spacing:.24em}
+.head{font:900 150px/1.05 var(--display);letter-spacing:.04em;text-shadow:0 6px 40px rgba(0,20,50,.85),0 0 60px rgba(69,216,255,.25)}
+.head.m{font-size:124px}
+.num{font:700 128px/1 var(--data);letter-spacing:.01em;color:#dff6ff;font-variant-numeric:tabular-nums;text-shadow:0 0 40px rgba(69,216,255,.45)}
+.num small{font:900 64px/1 var(--display);margin-left:10px;color:var(--frost)}
+.lbl{font:700 44px/1.3 var(--display);color:var(--frost);text-shadow:0 2px 20px rgba(0,10,30,.9)}
+.lbl.s{font:400 34px/1.45 var(--display);color:var(--mute)}
+.chip{display:inline-block;padding:14px 34px 16px;border:2px solid var(--cherenkov);border-radius:999px;font:900 58px/1 var(--display);letter-spacing:.18em;color:var(--cherenkov);background:rgba(4,24,48,.55);box-shadow:0 0 40px rgba(69,216,255,.25),inset 0 0 24px rgba(69,216,255,.15)}
+.facts{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;padding:0 90px}
+.facts span{font:700 34px/1 var(--display);color:var(--frost);padding:12px 20px;border-radius:10px;background:rgba(10,40,74,.7);border:1px solid rgba(140,178,207,.35)}
+.gold{color:var(--gold);text-shadow:0 0 50px rgba(243,200,112,.45),0 6px 30px rgba(0,0,0,.6)}
+.cite{width:820px;margin:0 auto;font:400 32px/1.55 var(--display);color:#d9c9a3}
+.name{font:700 118px/1 var(--data);letter-spacing:.03em;color:#fff;text-shadow:0 0 40px rgba(69,216,255,.35)}
+
+/* closing stats */
+.stat{display:flex;flex-direction:column;align-items:center;gap:14px}
+.stat b{font:900 116px/1 var(--display);color:#fff}
+.stat b em{font:700 124px/1 var(--data);font-style:normal;color:var(--cherenkov);margin-right:8px}
+.stat i{font:400 34px/1 var(--display);font-style:normal;color:var(--mute)}
+.ask{font:900 270px/1 var(--display);color:#fff;letter-spacing:.02em;text-shadow:0 0 80px rgba(69,216,255,.45),0 10px 40px rgba(0,0,0,.6)}
+.votes{display:flex;justify-content:center;gap:34px}
+.votes span{font:900 54px/1 var(--display);padding:22px 40px;border-radius:18px;border:2px dashed rgba(140,178,207,.6);color:var(--frost)}
+.votes span b{font:700 60px/1 var(--data);color:var(--cherenkov);margin-left:14px}
+.down{display:flex;flex-direction:column;align-items:center;gap:0}
+.down i{display:block;width:44px;height:44px;border-right:7px solid var(--cherenkov);border-bottom:7px solid var(--cherenkov);transform:rotate(45deg);animation:drop 1.1s ease-in-out infinite;opacity:.9}
+.down i:nth-child(2){animation-delay:.18s;opacity:.55;margin-top:-14px}
+@keyframes drop{0%,100%{translate:0 -8px}50%{translate:0 10px}}
+
+/* subtitles: big, centred, clear of the Douyin side rail and caption area */
+#sub{position:absolute;left:0;right:0;top:1300px;margin:0 auto;width:850px;text-align:center;font:900 68px/1.32 var(--display);color:var(--frost);text-wrap:balance;letter-spacing:.02em;
+  text-shadow:0 0 3px #01060f,0 3px 6px #01060f,0 6px 30px rgba(0,8,24,.95)}
+#sub .k{color:var(--cherenkov);white-space:nowrap}
+#sub .g{color:var(--gold);white-space:nowrap}
+#sub.pop{animation:pop .42s cubic-bezier(.2,.9,.25,1.15)}
+@keyframes pop{0%{opacity:0;transform:translateY(22px) scale(.96)}100%{opacity:1;transform:none}}
+</style>
+
+<div id="stage">
+  <canvas id="cv" width="1080" height="1920"></canvas>
+
+  <!-- 1 · hook (0–4s) -->
+  <div class="ov eyebrow zh" style="top:200px" data-in="0" data-out="4">此刻 · 每一秒</div>
+  <div class="ov num" style="top:262px" data-in="0" data-out="4" data-count="0,1000000000000,0.1,1.8" data-suffix="+">0</div>
+  <div class="ov lbl" style="top:418px" data-in="0.3" data-out="4">个看不见的粒子</div>
+
+  <!-- 2 · neutrino (4–12s) -->
+  <div class="ov eyebrow" style="top:170px" data-in="4" data-out="12">Neutrino · ν</div>
+  <div class="ov head" style="top:222px" data-in="4" data-out="12">中微子</div>
+  <div class="ov" style="top:408px" data-in="5.6" data-out="12"><span class="chip">幽灵粒子</span></div>
+  <div class="ov facts" style="top:1162px" data-in="6.4" data-out="9.3"><span>不带电</span><span>质量几乎为零</span><span>几乎不和物质碰撞</span></div>
+  <div class="ov lbl" style="top:1160px" data-in="9.4" data-out="12">对它来说：地球 ≈ 空气</div>
+
+  <!-- 3 · south pole (12–21s) -->
+  <div class="ov eyebrow zh" style="top:150px" data-in="12" data-out="21">南极点 · 阿蒙森-斯科特站</div>
+  <div class="ov head m" style="top:208px" data-in="13.2" data-out="16.3">冰下 2 公里</div>
+  <div class="ov num" style="top:206px;font-size:150px" data-in="16.4" data-out="21" data-count="0,5160,16.4,18.3">0</div>
+  <div class="ov lbl" style="top:372px" data-in="16.6" data-out="21">个光学探测器 · 86 根电缆</div>
+
+  <!-- 4 · IceCube (21–31s) -->
+  <div class="ov eyebrow" style="top:150px" data-in="21" data-out="31">IceCube Neutrino Observatory</div>
+  <div class="ov head" style="top:202px" data-in="21" data-out="31">冰立方</div>
+  <div class="ov lbl" style="top:382px" data-in="22.8" data-out="31">1 立方公里的冰 = 一台望远镜</div>
+  <div class="ov lbl s" style="top:1176px" data-in="28.2" data-out="31">切伦科夫光：带电粒子在冰中飞得比光还快时，留下的蓝色闪光</div>
+
+  <!-- 5 · 2017 (31–42s) -->
+  <div class="ov eyebrow" style="top:150px" data-in="31" data-out="35.8">IceCube-170922A</div>
+  <div class="ov num" style="top:206px;font-size:150px" data-in="31" data-out="35.8">2017.09.22</div>
+  <div class="ov eyebrow zh" style="top:150px" data-in="36" data-out="42">顺着来路 · 回溯</div>
+  <div class="ov num" style="top:206px;font-size:150px" data-in="36" data-out="42" data-count="0,40,36.0,38.4" data-unit="亿光年">0</div>
+  <div class="ov" style="top:1040px" data-in="38.4" data-out="42"><div class="lbl">耀变体 TXS 0506+056</div><div class="lbl s">中心是超大质量黑洞 · 喷流正对地球</div></div>
+
+  <!-- 6 · Nobel (42–50s) -->
+  <div class="ov eyebrow zh" style="top:150px" data-in="42" data-out="50">2026.10.06 · 斯德哥尔摩</div>
+  <div class="ov head m" style="top:206px" data-in="43.2" data-out="46.9">冰下之眼</div>
+  <div class="ov head m gold" style="top:206px;font-size:96px" data-in="47" data-out="50">2026 诺贝尔物理学奖</div>
+  <div class="ov cite" style="top:342px" data-in="47.5" data-out="50">表彰他对冰立方中微子天文台的决定性贡献，以及发现来自宇宙的高能中微子</div>
+  <div class="ov name" style="top:1040px" data-in="45.4" data-out="50">Francis Halzen</div>
+  <div class="ov lbl s" style="top:1176px" data-in="45.7" data-out="50">弗朗西斯·哈尔岑 · 威斯康星大学麦迪逊分校</div>
+
+  <!-- 7 · question (50–60s) -->
+  <div class="ov stat" style="top:300px" data-in="50" data-out="55"><b>十几年</b><i>2004 年开建，2017 年才等到那一颗</i></div>
+  <div class="ov stat" style="top:560px" data-in="51.2" data-out="55"><b><em>≈2.8</em>亿美元</b><i>建造总投入</i></div>
+  <div class="ov stat" style="top:820px" data-in="52.6" data-out="55"><b><em>1</em>颗中微子</b><i>就此指认出第一个高能中微子源</i></div>
+  <div class="ov ask" style="top:480px" data-in="55" data-out="999">值吗？</div>
+  <div class="ov votes" style="top:860px" data-in="57.2" data-out="999"><span>值<b>扣 1</b></span><span>不值<b>扣 2</b></span></div>
+  <div class="ov down" style="top:1060px" data-in="57.6" data-out="999"><i></i><i></i></div>
+
+  <div id="sub"></div>
+</div>
+
+<script>
+// Subtitle cues [start, end, text]. 【】 = blue highlight, 〖〗 = gold highlight.
+const CUES=[
+  [0.1,2.4,"每秒钟，都有【上万亿】个看不见的粒子"],
+  [2.4,4.0,"穿过【你的身体】"],
+  [4.0,5.6,"它们叫【中微子】"],
+  [5.6,7.6,"绰号“【幽灵粒子】”"],
+  [7.6,9.4,"穿过【整个地球】"],
+  [9.4,12.0,"对它来说，就像穿过【空气】一样"],
+  [12.0,13.4,"为了抓住它"],
+  [13.4,16.4,"科学家在【南极两公里深】的冰里"],
+  [16.4,18.8,"埋了【五千多个】探测器"],
+  [18.8,21.0,"日夜盯着"],
+  [21.0,22.8,"这就是“【冰立方】”"],
+  [22.8,26.0,"一立方公里的冰，变成了一台【望远镜】"],
+  [26.0,28.2,"专等中微子撞上冰时"],
+  [28.2,31.0,"发出的一丝【蓝光】"],
+  [31.0,33.0,"十几年后，【等到了】"],
+  [33.0,36.0,"2017年，科学家顺着【一颗中微子】"],
+  [36.0,38.2,"找到了它的老家"],
+  [38.2,42.0,"40亿光年外的一个【黑洞】"],
+  [42.0,43.2,"今天"],
+  [43.2,45.4,"带头建起这只“【冰下之眼】”的"],
+  [45.4,47.0,"Francis Halzen"],
+  [47.0,50.0,"拿下了〖诺贝尔物理学奖〗"],
+  [50.0,52.6,"花十几年、几亿美元"],
+  [52.6,55.0,"就为等【几颗粒子】"],
+  [55.0,57.2,"你觉得，【值吗？】"],
+  [57.2,60.0,"评论区，说说你的理由"]
+];
+const DURATION=60;
+
+const W=1080,H=1920;
+const stage=document.getElementById('stage');
+const cv=document.getElementById('cv');
+const mainCtx=cv.getContext('2d');
+const buf=document.createElement('canvas');buf.width=W;buf.height=H;
+const bufCtx=buf.getContext('2d');
+let ctx=mainCtx;
+
+const clamp=(v,a=0,b=1)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const eOut=t=>1-Math.pow(1-t,3);
+const ramp=(t,a,b)=>clamp((t-a)/(b-a));
+const mod=(a,m)=>((a%m)+m)%m;
+function rng(seed){return()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}}
+const TAU=Math.PI*2;
+const DATA_FONT='"Barlow Condensed","Arial Narrow",sans-serif';
+
+function vgrad(stops,y0=0,y1=H){const g=ctx.createLinearGradient(0,y0,0,y1);for(const [o,c] of stops)g.addColorStop(o,c);return g}
+function glowDot(x,y,r,rgb,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,`rgba(${rgb},${a})`);g.addColorStop(.35,`rgba(${rgb},${a*.45})`);g.addColorStop(1,`rgba(${rgb},0)`);ctx.fillStyle=g;ctx.fillRect(x-r,y-r,r*2,r*2)}
+
+/* ---------- shared: stars ---------- */
+const RS=rng(11);
+const STARS=Array.from({length:280},()=>({x:RS()*W,y:RS()*H,r:.6+RS()*1.8,p:RS()*TAU}));
+function stars(t,al,offY=0,streak=0,yMax=H){
+  ctx.save();
+  for(const s of STARS){
+    const y=mod(s.y+offY*(.4+s.r*.35),H);
+    if(y>yMax)continue;
+    const a=al*(.35+.45*Math.sin(t*1.7+s.p)**2)*(s.r/2.4+.3);
+    ctx.fillStyle=ctx.strokeStyle=`rgba(200,230,255,${a})`;
+    if(streak>1){ctx.lineWidth=s.r;ctx.beginPath();ctx.moveTo(s.x,y);ctx.lineTo(s.x,y-streak*(.4+s.r*.35));ctx.stroke()}
+    else{ctx.beginPath();ctx.arc(s.x,y,s.r,0,TAU);ctx.fill()}
+  }
+  ctx.restore();
+}
+
+/* ---------- shared: particle rain (neutrinos streaking through) ---------- */
+const RR=rng(7);
+const RAIN=Array.from({length:170},()=>({x:RR()*1700-760,s:RR()*2900,v:1300+RR()*1500,len:50+RR()*170,w:1.2+RR()*2.6,a:.35+RR()*.65}));
+function rain(lt,al,th=.3,count=RAIN.length){
+  const sx=Math.sin(th),sy=Math.cos(th);
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(let i=0;i<count;i++){const p=RAIN[i];
+    const s=mod(p.s+p.v*lt,2900);
+    const x=p.x+s*sx,y=-420+s*sy;
+    ctx.strokeStyle=`rgba(110,210,255,${p.a*al*.45})`;ctx.lineWidth=p.w;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-p.len*sx,y-p.len*sy);ctx.stroke();
+    ctx.fillStyle=`rgba(225,250,255,${p.a*al})`;ctx.beginPath();ctx.arc(x,y,p.w*1.25,0,TAU);ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* ---------- scene 1 · hook: particles through a body ---------- */
+const HUMAN=(()=>{
+  const R=[[30,545],[42,592],[150,618],[196,668],[214,800],[220,930],[206,1002],[176,996],[170,860],[150,705],[128,860],[148,965],[140,1100],[120,1196],[126,1222],[42,1222],[36,1100],[8,1005]];
+  const pts=[...R,...R.slice().reverse().map(([x,y])=>[-x,y])];
+  const n=pts.length,p=new Path2D();
+  const mid=i=>{const a=pts[mod(i,n)],b=pts[mod(i+1,n)];return[(a[0]+b[0])/2,(a[1]+b[1])/2]};
+  let m=mid(n-1);p.moveTo(m[0],m[1]);
+  for(let i=0;i<n;i++){const c=pts[i],m2=mid(i);p.quadraticCurveTo(c[0],c[1],m2[0],m2[1])}
+  p.closePath();p.moveTo(70,470);p.arc(0,470,70,0,TAU);
+  return p;
+})();
+function s1(lt){
+  const g=ctx.createRadialGradient(540,820,80,540,820,1200);g.addColorStop(0,'#0b2341');g.addColorStop(1,'#020812');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  stars(lt,.6);
+  const pulse=.5+.5*Math.sin(lt*3.2);
+  ctx.save();ctx.translate(540,40);
+  ctx.shadowColor='rgba(69,216,255,.7)';ctx.shadowBlur=30+14*pulse;
+  ctx.fillStyle='rgba(16,52,92,.5)';ctx.fill(HUMAN);
+  ctx.lineWidth=4;ctx.strokeStyle='rgba(170,230,255,.9)';ctx.stroke(HUMAN);
+  ctx.restore();
+  rain(lt+.6,1);
+}
+
+/* ---------- scene 2 · the ghost particle through Earth ---------- */
+const RL=rng(23);
+const LANES=Array.from({length:14},()=>({y:(RL()*2-1)*430,v:700+RL()*900,s:RL()*1600,len:120+RL()*220,a:.4+RL()*.5}));
+function s2(lt){
+  ctx.fillStyle=vgrad([[0,'#030a18'],[.5,'#06162c'],[1,'#020812']]);ctx.fillRect(0,0,W,H);
+  stars(lt,.7);
+  const cx=540,cy=820,R=290;
+  const ghost=1-.72*ease(ramp(lt,5.4,6.8));
+  // atmosphere + body
+  ctx.save();ctx.globalAlpha=ghost;
+  let gg=ctx.createRadialGradient(cx,cy,R*.85,cx,cy,R*1.32);gg.addColorStop(0,'rgba(60,170,255,.38)');gg.addColorStop(1,'rgba(60,170,255,0)');
+  ctx.fillStyle=gg;ctx.fillRect(cx-R*1.4,cy-R*1.4,R*2.8,R*2.8);
+  let gb=ctx.createRadialGradient(cx-R*.35,cy-R*.42,R*.08,cx,cy,R);gb.addColorStop(0,'#2b7cc0');gb.addColorStop(.55,'#0f3b68');gb.addColorStop(1,'#061a33');
+  ctx.fillStyle=gb;ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.fill();
+  ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.clip();
+  ctx.strokeStyle='rgba(150,220,255,.33)';ctx.lineWidth=1.6;
+  for(let k=-3;k<=3;k++){const ph=k*Math.PI/8,y=cy-R*Math.sin(ph),rx=R*Math.cos(ph);ctx.beginPath();ctx.ellipse(cx,y,rx,rx*.13,0,0,TAU);ctx.stroke()}
+  for(let i=0;i<12;i++){const l=i*Math.PI/12+lt*.32,rx=Math.abs(R*Math.cos(l));ctx.beginPath();ctx.ellipse(cx,cy,Math.max(rx,.5),R,0,0,TAU);ctx.stroke()}
+  ctx.restore();ctx.restore();
+  // dashed outline remains once the planet turns "transparent"
+  ctx.save();ctx.setLineDash([10,14]);ctx.lineWidth=2.5;ctx.strokeStyle=`rgba(170,225,255,${.15+.55*(1-ghost)})`;ctx.beginPath();ctx.arc(cx,cy,R,0,TAU);ctx.stroke();ctx.restore();
+  // neutrino lanes
+  ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  for(const L of LANES){const x=mod(L.s+L.v*lt,1700)-300,y=cy+L.y-(x-540)*.06;
+    const g=ctx.createLinearGradient(x-L.len,0,x,0);g.addColorStop(0,'rgba(90,200,255,0)');g.addColorStop(1,`rgba(140,225,255,${L.a})`);
+    ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.beginPath();ctx.moveTo(x-L.len,y+L.len*.06);ctx.lineTo(x,y);ctx.stroke();
+    ctx.fillStyle=`rgba(230,250,255,${L.a})`;ctx.beginPath();ctx.arc(x,y,3,0,TAU);ctx.fill()}
+  // hero neutrino crossing the planet's core
+  const hx=lerp(-120,1200,ramp(lt,.2,8.2)),hy=cy-20-(hx-540)*.05;
+  const tg=ctx.createLinearGradient(hx-420,0,hx,0);tg.addColorStop(0,'rgba(69,216,255,0)');tg.addColorStop(1,'rgba(180,240,255,.95)');
+  ctx.strokeStyle=tg;ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(hx-420,hy+21);ctx.lineTo(hx,hy);ctx.stroke();
+  glowDot(hx,hy,60,'120,225,255',.9);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(hx,hy,8,0,TAU);ctx.fill();
+  ctx.restore();
+  ctx.font=`700 64px ${DATA_FONT}`;ctx.fillStyle='rgba(200,245,255,.95)';ctx.textAlign='center';ctx.fillText('ν',hx,hy-34);
+}
+
+/* ---------- scene 3 · South Pole cross-section ---------- */
+const SURF=600, depthY=d=>SURF+d*.232;
+const RT=rng(5);
+const STRATA=Array.from({length:34},(_,i)=>({y:SURF+60+i*17+RT()*14,amp:3+RT()*9,f:.002+RT()*.004,ph:RT()*TAU,w:1+RT()*7,a:.03+RT()*.08}));
+const S3X=Array.from({length:13},(_,i)=>205+i*56+(i%2?6:-4));
+function station(cx,base){
+  ctx.save();
+  // solar panels
+  for(let k=0;k<4;k++){const x=cx-330+k*44;ctx.fillStyle='#5f87b5';ctx.beginPath();ctx.moveTo(x,base-48);ctx.lineTo(x+38,base-52);ctx.lineTo(x+40,base-20);ctx.lineTo(x+2,base-16);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#8fb3cf';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#9fb6c9';ctx.fillRect(x+18,base-16,3,16)}
+  const body=vgrad([[0,'#e9f3fb'],[1,'#a9c3d8']],base-80,base);
+  ctx.fillStyle=body;
+  ctx.fillRect(cx-170,base-46,82,46);ctx.fillRect(cx+150,base-36,70,36);ctx.fillRect(cx-70,base-26,40,26);
+  ctx.beginPath();ctx.ellipse(cx,base,78,64,0,Math.PI,0);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+98,base,44,40,0,Math.PI,0);ctx.fill();
+  ctx.beginPath();ctx.ellipse(cx+40,base,34,28,0,Math.PI,0);ctx.fill();
+  ctx.strokeStyle='rgba(90,120,150,.6)';ctx.lineWidth=1.5;
+  for(let k=1;k<4;k++){ctx.beginPath();ctx.ellipse(cx,base,78*k/4,64,0,Math.PI,0);ctx.stroke()}
+  // dish
+  ctx.fillStyle='#dfeaf3';ctx.beginPath();ctx.ellipse(cx-6,base-74,15,9,-.5,0,TAU);ctx.fill();ctx.fillRect(cx-8,base-70,4,10);
+  // windows glow
+  ctx.fillStyle='rgba(255,226,150,.85)';for(let k=0;k<3;k++)ctx.fillRect(cx-160+k*24,base-32,10,7);
+  ctx.restore();
+}
+function aurora(lt,al){
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  for(let b=0;b<3;b++){for(let x=-20;x<W+20;x+=14){
+    const y=70+b*80+60*Math.sin(x*.0052+lt*.45+b*1.9)+26*Math.sin(x*.013-lt*.7+b);
+    const h=210+90*Math.sin(x*.009+b+lt*.3);
+    const a=(.11+.08*Math.sin(x*.02+lt*1.3+b*2))*al;
+    const g=ctx.createLinearGradient(0,y,0,y+h);g.addColorStop(0,'rgba(70,227,166,0)');g.addColorStop(.22,`rgba(70,227,166,${a})`);g.addColorStop(1,'rgba(40,150,170,0)');
+    ctx.fillStyle=g;ctx.fillRect(x,y,15,h)}}
+  ctx.restore();
+}
+function iceBody(){
+  ctx.fillStyle=vgrad([[0,'#7cb9e2'],[.18,'#2f78b4'],[.42,'#123f74'],[.62,'#0a2448'],[1,'#030b1a']],SURF,H);ctx.fillRect(0,SURF,W,H-SURF);
+  ctx.save();
+  for(const s of STRATA){ctx.strokeStyle=`rgba(200,235,255,${s.a})`;ctx.lineWidth=s.w;ctx.beginPath();
+    for(let x=0;x<=W;x+=30){const y=s.y+s.amp*Math.sin(x*s.f+s.ph);x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}
+  ctx.restore();
+}
+function s3(lt,t){
+  ctx.fillStyle=vgrad([[0,'#020814'],[1,'#0d2340']],0,SURF);ctx.fillRect(0,0,W,SURF);
+  stars(t,.8,0,0,SURF);
+  aurora(t,1);
+  iceBody();
+  // snow surface
+  ctx.fillStyle=vgrad([[0,'#f2f9ff'],[1,'#b8d7ee']],SURF-24,SURF+44);
+  ctx.beginPath();ctx.moveTo(0,SURF-6);for(let x=0;x<=W;x+=40)ctx.lineTo(x,SURF-6-6*Math.sin(x*.01)-4*Math.sin(x*.031));ctx.lineTo(W,SURF+44);ctx.lineTo(0,SURF+44);ctx.closePath();ctx.fill();
+  station(540,SURF-6);
+  // detection zone 1450–2450 m
+  const z1=depthY(1450),z2=depthY(2450),zone=ramp(lt,4.2,5.2);
+  ctx.fillStyle=`rgba(69,216,255,${.07*zone})`;ctx.fillRect(170,z1-14,750,z2-z1+28);
+  // depth ruler
+  ctx.save();ctx.strokeStyle='rgba(200,230,255,.55)';ctx.fillStyle='rgba(200,230,255,.8)';ctx.lineWidth=2;
+  ctx.font=`600 28px ${DATA_FONT}`;ctx.textAlign='left';
+  ctx.beginPath();ctx.moveTo(70,SURF+10);ctx.lineTo(70,depthY(2500));ctx.stroke();
+  for(const d of [0,500,1000,1500,2000,2500]){const y=depthY(d)+(d===0?10:0);ctx.beginPath();ctx.moveTo(62,y);ctx.lineTo(78,y);ctx.stroke();ctx.fillText(d?`${d} m`:'0',88,y+9)}
+  ctx.restore();
+  // strings drop in
+  ctx.save();ctx.lineCap='round';
+  S3X.forEach((x,i)=>{
+    const ts=1.0+i*.13,p=eOut(ramp(lt,ts,ts+1.7));if(p<=0)return;
+    const bot=lerp(SURF+30,z2+10,p);
+    ctx.strokeStyle='rgba(205,232,250,.75)';ctx.lineWidth=2.4;
+    ctx.beginPath();ctx.moveTo(540+(x-540)*.12,SURF-14);ctx.quadraticCurveTo(x,SURF-14,x,SURF+34);ctx.lineTo(x,bot);ctx.stroke();
+    for(let j=0;j<9;j++){const y=z1+(z2-z1)*j/8;if(y>bot)break;
+      const blink=lt>6.6?.55+.45*Math.max(0,Math.sin(lt*2.6+i*1.7+j*.9))**6:.55;
+      glowDot(x,y,26,'90,220,255',.55*blink);
+      ctx.fillStyle='#d8f6ff';ctx.beginPath();ctx.arc(x,y,5.5,0,TAU);ctx.fill()}
+  });
+  ctx.restore();
+  // sweep: "watching day and night"
+  if(lt>6.6){const sy=z1-30+mod((lt-6.6)*260,z2-z1+80);const g=ctx.createLinearGradient(0,sy-40,0,sy+40);g.addColorStop(0,'rgba(69,216,255,0)');g.addColorStop(.5,'rgba(69,216,255,.12)');g.addColorStop(1,'rgba(69,216,255,0)');ctx.fillStyle=g;ctx.fillRect(170,sy-40,750,80)}
+}
+
+/* ---------- scenes 4/5 · the cubic kilometre ---------- */
+const STR=[];
+for(let q=-4;q<=4;q++)for(let r=-4;r<=4;r++){if(Math.abs(q+r)>4)continue;const x=(q+r/2)/4.2,z=(r*Math.sqrt(3)/2)/4.2;STR.push({x,z,rad:Math.hypot(x,z)})}
+const DOMS=[];
+STR.forEach((s,si)=>{for(let j=0;j<16;j++)DOMS.push({x:s.x,y:1-2*j/15,z:s.z,si})});
+const norm=v=>{const l=Math.hypot(...v);return v.map(c=>c/l)};
+const V0=[.1,.22,-.05], DV=norm([-.5,-.8,.36]), TRACK=2.4;
+for(const d of DOMS){
+  const w=[d.x-V0[0],d.y-V0[1],d.z-V0[2]];
+  const s=clamp(w[0]*DV[0]+w[1]*DV[1]+w[2]*DV[2],0,TRACK);
+  const c=[V0[0]+DV[0]*s,V0[1]+DV[1]*s,V0[2]+DV[2]*s];
+  const dist=Math.hypot(d.x-c[0],d.y-c[1],d.z-c[2]);
+  d.hit=dist<.62?Math.pow(1-dist/.62,1.5):0;
+  d.delay=s/TRACK*1.0+dist*.9;
+}
+function along(k){return[V0[0]+DV[0]*k,V0[1]+DV[1]*k,V0[2]+DV[2]*k]}
+function drawCube(o){
+  const {cx,cy,sc,a,e=.36,build=1,et=null}=o;
+  const ca=Math.cos(a),sa=Math.sin(a),ce=Math.cos(e),se=Math.sin(e);
+  const P=(x,y,z)=>{const X=x*ca-z*sa,Z=x*sa+z*ca,Y=y*ce+Z*se,D=Z*ce-y*se,f=3.4/(3.4+D);return[cx+X*sc*f,cy-Y*sc*f,f,D]};
+  const hx=1.12,hy=1.08,bA=clamp(build*1.5-.2);
+  // box
+  const C=[];for(const x of[-hx,hx])for(const y of[-hy,hy])for(const z of[-hx,hx])C.push(P(x,y,z));
+  ctx.save();ctx.strokeStyle=`rgba(150,210,255,${.32*bA})`;ctx.lineWidth=2;
+  [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]].forEach(([i,j])=>{ctx.beginPath();ctx.moveTo(C[i][0],C[i][1]);ctx.lineTo(C[j][0],C[j][1]);ctx.stroke()});
+  // 1 km labels
+  ctx.fillStyle=`rgba(200,232,255,${.85*bA})`;ctx.font=`600 ${Math.round(34*sc/270)}px ${DATA_FONT}`;ctx.textAlign='center';
+  const m2=P(hx,0,-hx);ctx.textAlign='left';ctx.fillText('1 km',m2[0]+14,m2[1]);
+  // strings
+  ctx.lineWidth=1.4;
+  const sv=STR.map(s=>clamp((build*1.7-s.rad*.7)/.35));
+  STR.forEach((s,i)=>{if(!sv[i])return;const p1=P(s.x,1.4,s.z),p2=P(s.x,-1.04,s.z);
+    const g=ctx.createLinearGradient(p1[0],p1[1],p2[0],p2[1]);g.addColorStop(0,'rgba(140,200,240,0)');g.addColorStop(.22,`rgba(140,200,240,${.3*sv[i]})`);g.addColorStop(1,`rgba(140,200,240,${.3*sv[i]})`);
+    ctx.strokeStyle=g;ctx.beginPath();ctx.moveTo(p1[0],p1[1]);ctx.lineTo(p2[0],p2[1]);ctx.stroke()});
+  // DOMs, far to near
+  const pts=DOMS.map(d=>({d,p:P(d.x,d.y,d.z)})).sort((u,v)=>v.p[3]-u.p[3]);
+  for(const {d,p} of pts){const va=sv[d.si];if(!va)continue;
+    const a2=(.35+.45*(1-(p[3]+1.3)/2.6))*va;ctx.fillStyle=`rgba(175,225,255,${a2})`;ctx.beginPath();ctx.arc(p[0],p[1],3.1*p[2]*sc/270,0,TAU);ctx.fill()}
+  // the event
+  if(et!==null&&et>-1){
+    ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+    if(et<.25){
+      const k=Math.min(et,0)*4.2,head=P(...along(k)),tail=P(...along(-4.6));
+      ctx.setLineDash([12,12]);ctx.lineDashOffset=-et*120;ctx.strokeStyle='rgba(180,235,255,.65)';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(tail[0],tail[1]);ctx.lineTo(head[0],head[1]);ctx.stroke();ctx.setLineDash([]);
+      glowDot(head[0],head[1],50,'160,235,255',.9);
+      ctx.fillStyle='#fff';ctx.font=`700 56px ${DATA_FONT}`;ctx.textAlign='center';ctx.fillText('ν',head[0]+34,head[1]-26);
+    }
+    if(et>=0){
+      const L=TRACK*clamp(et/1.0),v=P(...V0),end=P(...along(L));
+      // Cherenkov bloom at the vertex
+      const bl=1-clamp(et/.9);if(bl>0)glowDot(v[0],v[1],50+et*240,'70,170,255',.6*bl);
+      // lit DOMs (blue light reaching the sensors)
+      for(const {d,p} of pts){if(!d.hit||et<d.delay)continue;
+        const b=clamp((et-d.delay)/.15)*(1-.45*clamp((et-d.delay-1.5)/4));
+        const u=clamp(d.delay/1.6);
+        const rgb=`${Math.round(lerp(150,40,u))},${Math.round(lerp(230,110,u))},255`;
+        const r=(6+24*d.hit)*p[2]*sc/270;
+        glowDot(p[0],p[1],r*1.5,rgb,.55*b);
+        ctx.fillStyle=`rgba(${rgb},${b})`;ctx.beginPath();ctx.arc(p[0],p[1],r*.32+2,0,TAU);ctx.fill()}
+      // track
+      const g=ctx.createLinearGradient(v[0],v[1],end[0],end[1]);g.addColorStop(0,'rgba(200,245,255,.95)');g.addColorStop(1,'rgba(80,190,255,.75)');
+      ctx.strokeStyle=g;ctx.lineWidth=5*sc/270;ctx.beginPath();ctx.moveTo(v[0],v[1]);ctx.lineTo(end[0],end[1]);ctx.stroke();
+      if(et<1.1)glowDot(end[0],end[1],70,'70,170,255',.6);
+    }
+    ctx.globalCompositeOperation='source-over';
+  }
+  ctx.restore();
+  return P;
+}
+function iceDeep(){
+  const g=ctx.createRadialGradient(540,760,100,540,900,1300);g.addColorStop(0,'#0f3a6a');g.addColorStop(.55,'#071c3a');g.addColorStop(1,'#020812');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+}
+const RF=rng(31);
+const MOTES=Array.from({length:70},()=>({x:RF()*W,y:RF()*H,r:1+RF()*2.5,v:8+RF()*20,p:RF()*TAU}));
+function motes(t,al){ctx.save();for(const m of MOTES){const y=mod(m.y-m.v*t,H);ctx.fillStyle=`rgba(150,215,255,${al*(.15+.2*Math.sin(t+m.p)**2)})`;ctx.beginPath();ctx.arc(m.x+8*Math.sin(t*.4+m.p),y,m.r,0,TAU);ctx.fill()}ctx.restore()}
+function s4(lt,t){
+  iceDeep();motes(t,1);
+  const zoom=lerp(.82,1,eOut(ramp(lt,0,2.4)));
+  drawCube({cx:540,cy:800,sc:270*zoom,a:-.6+lt*.07,build:ramp(lt,0,2.2),et:lt-5.6});
+}
+
+/* ---------- scene 5 · tracing it home ---------- */
+function blackHole(x,y,lt,al){
+  ctx.save();ctx.globalAlpha=al;
+  glowDot(x,y,460,'70,110,255',.35);
+  ctx.globalCompositeOperation='lighter';
+  // jets — the one aimed at us is brighter
+  for(const [dir,a] of [[1,.75],[-1,.35]]){const g=ctx.createLinearGradient(x,y,x+dir*18,y+dir*430);g.addColorStop(0,`rgba(170,235,255,${a})`);g.addColorStop(1,'rgba(70,160,255,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-10,y);ctx.lineTo(x+dir*18-34,y+dir*430);ctx.lineTo(x+dir*18+34,y+dir*430);ctx.lineTo(x+10,y);ctx.closePath();ctx.fill()}
+  // accretion disk, back half
+  const ring=(from,to)=>{for(let i=0;i<16;i++){const rx=92+i*11,ry=rx*.27;ctx.strokeStyle=`rgba(${Math.round(lerp(235,60,i/15))},${Math.round(lerp(245,130,i/15))},255,${.5*(1-i/16)})`;ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x,y,rx,ry,-.12,from,to);ctx.stroke()}};
+  ring(Math.PI,TAU);
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(x,y,70,0,TAU);ctx.fill();
+  ctx.globalCompositeOperation='lighter';
+  ctx.strokeStyle='rgba(200,235,255,.85)';ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,74,0,TAU);ctx.stroke();
+  ring(0,Math.PI);
+  for(let k=0;k<5;k++){const th=lt*1.4+k*TAU/5,rx=120+k*14;glowDot(x+Math.cos(th)*rx,y+Math.sin(th)*rx*.27,22,'210,240,255',.55)}
+  ctx.restore();
+}
+const panY=lt=>1420*ease(ramp(lt,2.3,7.2));
+function s5(lt,t){
+  const oy=panY(lt),vel=panY(lt+.05)-oy;
+  ctx.fillStyle=vgrad([[0,'#01040c'],[.6,'#04112a'],[1,'#071c3a']]);ctx.fillRect(0,0,W,H);
+  stars(t,.9,oy*.55,vel*1.6);
+  const cubeY=1000+oy;
+  let v=[540,cubeY];
+  if(cubeY<H+400){const P=drawCube({cx:540,cy:cubeY,sc:190,a:.1+lt*.07,et:4.4+lt});v=P(...V0)}
+  // found-it ping
+  if(lt<2.4){ctx.save();for(let k=0;k<3;k++){const p=mod(lt*.9-k*.33,1);ctx.strokeStyle=`rgba(69,216,255,${.7*(1-p)})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(v[0],v[1],20+p*260,0,TAU);ctx.stroke()}ctx.restore()}
+  // back-trace line toward the source
+  const bx=650,by=-860+oy;
+  const hp=ease(ramp(lt,1.6,6.8));
+  if(hp>0){const hxp=lerp(v[0],bx,hp),hyp=lerp(v[1],by,hp);
+    ctx.save();ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+    ctx.setLineDash([22,16]);ctx.lineDashOffset=lt*90;ctx.strokeStyle='rgba(120,220,255,.85)';ctx.lineWidth=4;
+    ctx.beginPath();ctx.moveTo(v[0],v[1]);ctx.lineTo(hxp,hyp);ctx.stroke();ctx.setLineDash([]);
+    if(hp<1)glowDot(hxp,hyp,70,'150,230,255',.9);
+    ctx.restore()}
+  blackHole(bx,by,lt,ramp(lt,5.4,7.6));
+}
+
+/* ---------- scene 6 · the eye under the ice ---------- */
+function eyePts(){const up=[],lo=[];const N=26;for(let i=0;i<=N;i++){const u=-1+2*i/N;up.push([u,-(1-u*u)]);lo.push([u,(1-u*u)*.85])}return{up,lo}}
+const EYE=eyePts();
+function s6(lt,t){
+  iceDeep();motes(t,1);
+  const cx=540,cy=730,w=410,h=250,sw=1+.015*Math.sin(t*1.6);
+  // faint strings behind
+  ctx.save();ctx.strokeStyle='rgba(140,200,240,.10)';ctx.lineWidth=1.4;for(let i=0;i<15;i++){const x=120+i*60;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}ctx.restore();
+  const gt=ease(ramp(lt,5.0,6.3));
+  const col=[Math.round(lerp(80,243,gt)),Math.round(lerp(215,200,gt)),Math.round(lerp(255,112,gt))].join(',');
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  // lids
+  for(const arr of [EYE.up,EYE.lo])arr.forEach(([u,k],i)=>{const ap=ramp(lt,.1+(1-Math.abs(u))*.0+Math.abs(u)*.9,.5+Math.abs(u)*.9);if(!ap)return;
+    const x=cx+u*w*sw,y=cy+k*h*sw;glowDot(x,y,24,'90,215,255',.55*ap);ctx.fillStyle=`rgba(220,246,255,${ap})`;ctx.beginPath();ctx.arc(x,y,5,0,TAU);ctx.fill()});
+  // iris rings
+  const ia=ramp(lt,.9,2.2);
+  if(gt>0){for(let k=0;k<28;k++){const th=k*TAU/28+t*.15;const r1=175,r2=175+70*gt+18*Math.sin(t*3+k);
+    ctx.strokeStyle=`rgba(243,200,112,${.35*gt})`;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(cx+Math.cos(th)*r1,cy+Math.sin(th)*r1);ctx.lineTo(cx+Math.cos(th)*r2,cy+Math.sin(th)*r2);ctx.stroke()}}
+  for(const [r,n,sz] of [[150,40,5],[110,28,4.5]]){for(let k=0;k<n;k++){const th=k*TAU/n+(r===150?t*.12:-t*.18),x=cx+Math.cos(th)*r*sw,y=cy+Math.sin(th)*r*sw;
+    glowDot(x,y,20,col,.5*ia);ctx.fillStyle=`rgba(${col},${ia})`;ctx.beginPath();ctx.arc(x,y,sz,0,TAU);ctx.fill()}}
+  glowDot(cx,cy,180,col,.55*ia);
+  ctx.restore();
+  ctx.fillStyle=`rgba(1,6,15,${.9*ia})`;ctx.beginPath();ctx.arc(cx,cy,62*sw,0,TAU);ctx.fill();
+  ctx.strokeStyle=`rgba(${col},${.9*ia})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy,62*sw,0,TAU);ctx.stroke();
+  // pupil highlight
+  ctx.fillStyle=`rgba(255,255,255,${.8*ia})`;ctx.beginPath();ctx.arc(cx-20,cy-22,9,0,TAU);ctx.fill();
+}
+
+/* ---------- scene 7 · was it worth it ---------- */
+function s7(lt,t){
+  iceDeep();motes(t,.8);
+  ctx.save();ctx.strokeStyle='rgba(140,200,240,.08)';ctx.lineWidth=1.4;for(let i=0;i<15;i++){const x=120+i*60;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}ctx.restore();
+  rain(lt*.3,.35,.3,40);
+  if(lt>5){glowDot(540,620,520,'69,216,255',.18*ramp(lt,5,6))}
+}
+
+/* ---------- timeline ---------- */
+const SCENES=[{a:0,b:4,d:s1},{a:4,b:12,d:s2},{a:12,b:21,d:s3},{a:21,b:31,d:s4},{a:31,b:42,d:s5},{a:42,b:50,d:s6},{a:50,b:1e9,d:s7}];
+const XF=.4;
+function withCtx(c,fn){const old=ctx;ctx=c;c.save();fn();c.restore();ctx=old}
+function draw(t){
+  ctx=mainCtx;ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='#020812';ctx.fillRect(0,0,W,H);
+  for(const s of SCENES){
+    if(t<s.a-XF||t>s.b+XF)continue;
+    const al=s.a===0?1:ramp(t,s.a-XF,s.a+XF);
+    if(al<=0)continue;
+    if(al>=1)withCtx(mainCtx,()=>s.d(t-s.a,t));
+    else{bufCtx.clearRect(0,0,W,H);withCtx(bufCtx,()=>s.d(t-s.a,t));mainCtx.save();mainCtx.globalAlpha=al;mainCtx.drawImage(buf,0,0);mainCtx.restore()}
+  }
+  // bottom shade keeps subtitles legible
+  const g=mainCtx.createLinearGradient(0,1180,0,1720);g.addColorStop(0,'rgba(1,5,14,0)');g.addColorStop(.4,'rgba(1,5,14,.5)');g.addColorStop(1,'rgba(1,5,14,.25)');
+  mainCtx.fillStyle=g;mainCtx.fillRect(0,1180,W,540);
+}
+
+const OVS=[...document.querySelectorAll('.ov')].map(el=>({el,a:+el.dataset.in,b:+el.dataset.out,count:el.dataset.count?el.dataset.count.split(',').map(Number):null,suffix:el.dataset.suffix||'',unit:el.dataset.unit||''}));
+const sub=document.getElementById('sub');
+let cueIdx=-2;
+const fmtCue=s=>s.replace(/【(.+?)】/g,'<span class="k">$1</span>').replace(/〖(.+?)〗/g,'<span class="g">$1</span>');
+function overlays(t){
+  for(const o of OVS){
+    const on=t>=o.a&&t<o.b;
+    if(on!==o.el.classList.contains('on'))o.el.classList.toggle('on',on);
+    if(o.count&&on){const [f,to,t0,t1]=o.count;const v=Math.round(lerp(f,to,eOut(ramp(t,t0,t1))));
+      const txt=v.toLocaleString('en-US')+(v>=to?o.suffix:'');
+      const html=o.unit?`${txt}<small>${o.unit}</small>`:txt;
+      if(o.el.__h!==html){o.el.innerHTML=html;o.el.__h=html}}
+  }
+  const i=CUES.findIndex(c=>t>=c[0]&&t<c[1]);
+  if(i!==cueIdx){cueIdx=i;
+    sub.innerHTML=i>=0?fmtCue(CUES[i][2]):'';
+    sub.classList.remove('pop');void sub.offsetWidth;if(i>=0)sub.classList.add('pop')}
+}
+
+/* fit the 9:16 stage to any window */
+function fit(){const s=Math.min(innerWidth/W,innerHeight/H);stage.style.transform=`translate(${(innerWidth-W*s)/2}px,${(innerHeight-H*s)/2}px) scale(${s})`}
+addEventListener('resize',fit);fit();
+
+/* clock: autoplays; keyboard only — R or Space replays, P pauses */
+let t0=0,paused=false,pausedAt=0,frozen=null;
+function now(){return performance.now()/1000}
+function restart(){t0=now();paused=false;cueIdx=-2;OVS.forEach(o=>o.el.classList.remove('on'))}
+addEventListener('keydown',e=>{
+  if(e.key==='r'||e.key==='R'||e.code==='Space'){e.preventDefault();frozen=null;restart()}
+  if(e.key==='p'||e.key==='P'){if(paused){t0+=now()-pausedAt;paused=false}else{pausedAt=now();paused=true}}
+});
+window.__seek=sec=>{frozen=sec;OVS.forEach(o=>{o.el.style.transition='none'});draw(sec);overlays(sec)};
+function loop(){
+  if(frozen===null){const t=Math.min((paused?pausedAt:now())-t0,DURATION+30);draw(t);overlays(t)}
+  requestAnimationFrame(loop);
+}
+const fontsReady=Promise.race([
+  Promise.all([document.fonts.load('900 68px "Noto Sans SC"','每秒钟中微子'),document.fonts.load('700 120px "Barlow Condensed"','0123')]),
+  new Promise(r=>setTimeout(r,2500))
+]);
+fontsReady.then(()=>{restart();loop()});
+</script>
