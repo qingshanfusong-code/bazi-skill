@@ -34,3 +34,11 @@ node export_audio_tl.mjs
 python3 audio/make_audio.py out/audio_tl.json out/soundtrack.wav
 ./finish.sh
 ```
+
+## 成片下载
+
+- `release/V12_极致的燃烧_预览_28MB.mp4` — 压缩预览版
+- `release/V12_抖音上传版.mp4.part00/01` — 1080p60 高清上传版（约 175MB，因 GitHub 单文件 100MB 限制被切分）。合并：
+  - macOS / Linux：`cat V12_抖音上传版.mp4.part* > V12_抖音上传版.mp4`
+  - Windows：`copy /b V12_抖音上传版.mp4.part00+V12_抖音上传版.mp4.part01 V12_抖音上传版.mp4`
+- `cover.jpg` — 抖音封面
